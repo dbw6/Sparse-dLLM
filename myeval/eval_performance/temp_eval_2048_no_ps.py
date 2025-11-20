@@ -54,7 +54,7 @@ models =  [
     ) for abbr, scaling_config, diffusion_config, kernel_size, keep_ratio in models
 ]
 
-work_dir = './outputs/sparse_dllm/'
+work_dir = './outputs/sparse_dllm/2048_no_ps/'
 
 infer = dict(
     partitioner=dict(type=NaivePartitioner), 

@@ -25,7 +25,7 @@ datasets += gsm8k_datasets
 # datasets += piqa_datasets
 # datasets += ARC_c_datasets
 max_seq_len = 2048
-max_out_len = 2048
+max_out_len = 4096
 
 num_gpus = {
     'llada_8b_chat': 1, 'llada_1_5_8b': 1, 
@@ -41,7 +41,7 @@ path_dict = {
 }
 
 models = [
-    ('llada_1_5_8b-sparse_dllm', {}, {'steps': 2048, 'block_length': 32, }, 3, 0.5),
+    ('llada_1_5_8b-sparse_dllm', {}, {'steps': 4096, 'block_length': 32, }, 3, 0.5),
 ]
 
 models =  [
@@ -54,7 +54,7 @@ models =  [
     ) for abbr, scaling_config, diffusion_config, kernel_size, keep_ratio in models
 ]
 
-work_dir = './outputs/sparse_dllm/'
+work_dir = './outputs/sparse_dllm/4096_no_ps/'
 
 infer = dict(
     partitioner=dict(type=NaivePartitioner), 

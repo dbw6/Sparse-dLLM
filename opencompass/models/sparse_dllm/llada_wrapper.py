@@ -125,6 +125,7 @@ class Sparse_dLLM_LLaDACausalLM(HuggingFaceBaseModel):
                  ## add parameters
                  kernel_size: Optional[int] = None,
                  keep_ratio: float = 0.5,
+                 disable_prefix_cache_eviction: bool = False,
 
                  **other_kwargs):
 
@@ -151,6 +152,7 @@ class Sparse_dLLM_LLaDACausalLM(HuggingFaceBaseModel):
         
         self.keep_ratio = keep_ratio
         self.kernel_size = kernel_size
+        self.disable_prefix_cache_eviction = disable_prefix_cache_eviction
 
         if model_type == 'dream':
             self.diffusion_config = {'steps': 32, 'alg': 'origin', 'output_history': True, 'return_dict_in_generate': True, }
@@ -188,6 +190,7 @@ class Sparse_dLLM_LLaDACausalLM(HuggingFaceBaseModel):
         config.block_len = self.block_len
         config.kernel_size = self.kernel_size
         config.keep_ratio = self.keep_ratio
+        config.disable_prefix_cache_eviction = self.disable_prefix_cache_eviction
 
         if self.scaling_config is not None:
             scaling_factor = self.scaling_config['scaling_factor'] if 'scaling_factor' in self.scaling_config else 1

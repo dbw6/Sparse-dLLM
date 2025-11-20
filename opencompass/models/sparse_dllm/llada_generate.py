@@ -74,7 +74,8 @@ def generate(model, prompt, steps=128, gen_length=128, block_length=128, tempera
     for num_block in range(num_blocks):
         ## Initialize CustomCache for each block
         customcache = CustomCache(n_layers = model.config.n_layers, device = torch.device("cuda" if torch.cuda.is_available() else "cpu"), 
-                        kernel_size=model.config.kernel_size, keep_ratio=model.config.keep_ratio)
+                        kernel_size=model.config.kernel_size, keep_ratio=model.config.keep_ratio, 
+                        disable_prefix_cache_eviction=model.config.disable_prefix_cache_eviction)
 
         block_start = prompt_len + num_block * block_length
         block_end = prompt_len + (num_block + 1) * block_length

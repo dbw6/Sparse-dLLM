@@ -138,6 +138,7 @@ def main():
     parser.add_argument("--block_length", type=int, default=32, help="Block length")
     parser.add_argument("--steps", type=int, default=256, help="Steps")
     parser.add_argument("--gen_length", type=int, default=256, help="Generate length")
+    parser.add_argument("--disable_prefix_cache_eviction", action='store_true', help="Disable prefix cache eviction")
     parser.add_argument("--apply_chat_template", type=bool, default=False, help="Apply chat template")
     parser.add_argument("--output_dir", type=str, default="./results", help="Output directory for results")
     
@@ -153,6 +154,7 @@ def main():
     config.kernel_size = args.kernel_size
     config.keep_ratio = args.keep_ratio
     config.block_len = args.block_length
+    config.disable_prefix_cache_eviction = args.disable_prefix_cache_eviction
     model = LLaDAModelLM.from_pretrained(args.model_path, config=config, device_map='auto', torch_dtype=torch.bfloat16, trust_remote_code=True).cuda()
     model.eval()
     

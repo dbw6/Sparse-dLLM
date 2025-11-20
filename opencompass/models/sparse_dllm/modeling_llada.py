@@ -525,10 +525,11 @@ def alibi_attention_bias(seq_len: int, config: ModelConfig, device: torch.device
 
 ## Dynamic Cache Eviction
 class CustomCache:
-    def __init__(self, n_layers: int, device: torch.device, kernel_size: Optional[int] = None, keep_ratio: float = 0.7):
+    def __init__(self, n_layers: int, device: torch.device, kernel_size: Optional[int] = None, keep_ratio: float = 0.7, disable_prefix_cache_eviction: bool = False):
         self.cache = {}
         self.keep_ratios = [keep_ratio for i in range(n_layers)]
         self.pool_kernel_size = kernel_size
+        self.disable_prefix_cache_eviction = disable_prefix_cache_eviction
         
     def get_cache(self, layer_id: int):
         return self.cache.get(layer_id, {"k": None, "v": None})
@@ -546,8 +547,26 @@ class CustomCache:
 
         # q_block: [B, n_heads, block_len, head_dim]
         # cached_k: [B, n_kv_heads, seq_len, head_dim]
-        filtered_cached_k = torch.cat([cached_k[:, :, :cur_filtered_len, :], cached_k[:, :, cur_filtered_len + block_len:, :]], dim = 2)
-        filtered_cached_v = torch.cat([cached_v[:, :, :cur_filtered_len, :], cached_v[:, :, cur_filtered_len + block_len:, :]], dim = 2)
+        
+        if self.disable_prefix_cache_eviction:
+            ## sparse prefix
+            # filtered_cached_k = torch.cat([cached_k[:, :, :cur_filtered_len, :], cached_k[:, :, cur_filtered_len + block_len:, :]], dim = 2)
+            # filtered_cached_v = torch.cat([cached_v[:, :, :cur_filtered_len, :], cached_v[:, :, cur_filtered_len + block_len:, :]], dim = 2)
+
+            ## full prefix
+            filtered_cached_k = cached_k[:, :, cur_filtered_len + block_len:, :]
+            filtered_cached_v = cached_v[:, :, cur_filtered_len + block_len:, :]
+
+            if filtered_cached_k.size(2) == 0:
+                self.cache[layer_id] = {
+                    "k": cached_k[:, :, :cur_filtered_len, :],
+                    "v": cached_v[:, :, :cur_filtered_len, :]
+                }
+                return
+        else:
+            filtered_cached_k = torch.cat([cached_k[:, :, :cur_filtered_len, :], cached_k[:, :, cur_filtered_len + block_len:, :]], dim = 2)
+            filtered_cached_v = torch.cat([cached_v[:, :, :cur_filtered_len, :], cached_v[:, :, cur_filtered_len + block_len:, :]], dim = 2)
+
         if q_block.size(1) != filtered_cached_k.size(1):
             filtered_cached_k_attn = filtered_cached_k.repeat_interleave(
                 q_block.size(1) // filtered_cached_k.size(1), dim=1
@@ -574,6 +593,12 @@ class CustomCache:
         n_kv_heads = filtered_cached_k.size(1)
         filtered_cached_k = filtered_cached_k[:, torch.arange(n_kv_heads, device = filtered_cached_k.device)[:, None], keep_indices]
         filtered_cached_v = filtered_cached_v[:, torch.arange(n_kv_heads, device = filtered_cached_k.device)[:, None], keep_indices]
+
+        if self.disable_prefix_cache_eviction:
+            ## full prefix
+            filtered_cached_k = torch.cat([cached_k[:, :, :cur_filtered_len, :], filtered_cached_k], dim=2)
+            filtered_cached_v = torch.cat([cached_v[:, :, :cur_filtered_len, :], filtered_cached_v], dim=2)
+
         self.cache[layer_id] = {
             "k": filtered_cached_k,
             "v": filtered_cached_v

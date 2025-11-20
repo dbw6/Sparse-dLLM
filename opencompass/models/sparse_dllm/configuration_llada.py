@@ -368,6 +368,9 @@ class ModelConfig():
     ## add kernel_size/keep_ratio
     kernel_size: Optional[int] = 3
     keep_ratio: float = 0.5
+    
+    ## add parameter to disable prefix cache eviction
+    disable_prefix_cache_eviction: bool = False
 
     @property
     def effective_n_kv_heads(self) -> int:

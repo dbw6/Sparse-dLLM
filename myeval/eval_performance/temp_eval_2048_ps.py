@@ -47,14 +47,14 @@ models = [
 models =  [
     dict(
         type=Sparse_dLLM_LLaDACausalLM, abbr=abbr, path=path_dict[abbr.split('-')[0]], 
-        kernel_size=kernel_size, keep_ratio=keep_ratio, disable_prefix_cache_eviction=True,
+        kernel_size=kernel_size, keep_ratio=keep_ratio, disable_prefix_cache_eviction=False,
         scaling_config=scaling_config, diffusion_config=diffusion_config, seed=2025, model_type=abbr.split('_')[0],
         max_seq_len = max_seq_len, max_out_len=max_out_len, batch_size=1, 
         run_cfg=dict(num_gpus=num_gpus[abbr.split('-')[0]], num_procs=num_gpus[abbr.split('-')[0]]),
     ) for abbr, scaling_config, diffusion_config, kernel_size, keep_ratio in models
 ]
 
-work_dir = './outputs/sparse_dllm/'
+work_dir = './outputs/sparse_dllm/2048_ps/'
 
 infer = dict(
     partitioner=dict(type=NaivePartitioner), 
